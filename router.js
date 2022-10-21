@@ -5,7 +5,7 @@ const User = require("./models/user.models");
 router.post("/create-user", async (req, res) => {
   const requestBody = req.body;
   if (!requestBody.username || !requestBody.password || !requestBody.email) {
-    res.status(500).json({ error: "Request Body Not Found" });
+    res.status(500).json({ error: "Request Body is invalid" });
   }
   try {
     const newUser = {
@@ -34,7 +34,37 @@ router.post("/create-user", async (req, res) => {
   }
 });
 
-router.put("/update-user/:userId", (req, res) => {});
+router.put("/update-user/:userId", async (req, res) => {
+  const requestBody = req.body;
+  const userId = req.params.userId;
+  if (!userId) {
+    res.status(500).json({ error: "User Id is missing" });
+  } 
+  if (
+    !requestBody.username ||
+    !requestBody.password ||
+    !requestBody.email
+  ) {
+    res.status(500).json({ error: "Request Body is Invalid" });
+  }
+  const userObject = await User.findOne({ userId });
+  if (!userObject) {
+    res.status(500).json({ error: "User Id is not found in db" });
+  }
+  userObject.username = requestBody.username;
+  userObject.email = requestBody.email;
+  userObject.password = requestBody.password;
+
+  try {
+    const updateResponse = await userObject.save();
+    res
+      .status(200)
+      .json({ message: "User Update is successful", response: updateResponse });
+  } catch (error) {
+    console.log("User Updation Failed", error);
+    res.status(500).json({ message: "User Updation Failed", error });
+  }
+});
 
 router.delete("/delete-user/:userId", (req, res) => {});
 
